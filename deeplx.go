@@ -26,7 +26,7 @@ func Translate(text, sourceLang, targetLang string) (string, error) {
 		return "", errors.New("No Translate Text Found")
 	}
 
-	response, err := post("https://api.deeplx.org/translate", RequestParams{
+	response, err := post("https://translate.smurl1.asia/translate", RequestParams{
 		Text:       text,
 		SourceLang: sourceLang,
 		TargetLang: targetLang,
