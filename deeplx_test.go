@@ -6,7 +6,7 @@ import (
 )
 
 func TestTranslate(t *testing.T) {
-	response, err := Translate("Hello", "EN", "ZH")
-	assert.Nil(t, err)
+	response := Translate("Hello", "EN", "ZH")
+	assert.Equal(t, int64(200), response.Code)
 	t.Log(response)
 }
