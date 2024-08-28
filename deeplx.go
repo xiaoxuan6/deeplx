@@ -1,17 +1,25 @@
 package deeplx
 
 import (
+	"bufio"
 	"encoding/json"
 	"errors"
 	"github.com/abadojack/whatlanggo"
 	"github.com/avast/retry-go"
 	"github.com/tidwall/gjson"
 	"io"
+	"math/rand"
 	"net/http"
 	"strings"
 )
 
+var urls = []string{"https://deeplx.mingming.dev/translate", "https://deeplx.niubipro.com/translate"}
+
 func Translate(text, sourceLang, targetLang string) (string, error) {
+	if len(text) == 0 {
+		return "", errors.New("No Translate Text Found")
+	}
+
 	if len(sourceLang) == 0 {
 		lang := whatlanggo.DetectLang(text)
 		deepLLang := strings.ToUpper(lang.Iso6391())
@@ -22,11 +30,24 @@ func Translate(text, sourceLang, targetLang string) (string, error) {
 		targetLang = "EN"
 	}
 
-	if len(text) == 0 {
-		return "", errors.New("No Translate Text Found")
+	resp, err := http.Get("https://github-mirror.us.kg/https://github.com/ycvk/deeplx-local/blob/windows/url.txt")
+	defer resp.Body.Close()
+	if err == nil {
+		r := bufio.NewReader(resp.Body)
+		for {
+			line, _, errs := r.ReadLine()
+			if errs == io.EOF {
+				break
+			}
+
+			urls = append(urls, string(line))
+		}
 	}
 
-	response, err := post("https://translate.smurl1.asia/translate", RequestParams{
+	randomIndex := rand.Intn(len(urls))
+	uri := urls[randomIndex]
+
+	response, err := post(uri, RequestParams{
 		Text:       text,
 		SourceLang: sourceLang,
 		TargetLang: targetLang,
