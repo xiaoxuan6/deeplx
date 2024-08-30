@@ -13,9 +13,12 @@ import (
 	"time"
 )
 
-var urls = []string{"https://deeplx.mingming.dev/translate", "https://deeplx.niubipro.com/translate"}
+var (
+	targetUrls = make([]string, 0)
+	urls       = []string{"https://deeplx.mingming.dev/translate", "https://deeplx.niubipro.com/translate"}
+)
 
-type Request struct {
+type request struct {
 	Text       string `json:"text"`
 	SourceLang string `json:"source_lang"`
 	TargetLang string `json:"target_lang"`
@@ -28,27 +31,30 @@ type Response struct {
 }
 
 func fetchUri() string {
-	client := &http.Client{
-		Timeout: 3 * time.Second,
-	}
+	if len(targetUrls) < 0 {
+		client := &http.Client{
+			Timeout: 3 * time.Second,
+		}
 
-	resp, err := client.Get("https://github-mirror.us.kg/https://github.com/ycvk/deeplx-local/blob/windows/url.txt")
-	defer func() {
-		_ = resp.Body.Close()
-	}()
+		resp, err := client.Get("https://github-mirror.us.kg/https://github.com/ycvk/deeplx-local/blob/windows/url.txt")
+		defer func() {
+			_ = resp.Body.Close()
+		}()
 
-	if err == nil {
-		r := bufio.NewReader(resp.Body)
-		for {
-			line, _, errs := r.ReadLine()
-			if errs == io.EOF {
-				break
+		if err == nil {
+			r := bufio.NewReader(resp.Body)
+			for {
+				line, _, errs := r.ReadLine()
+				if errs == io.EOF {
+					break
+				}
+
+				targetUrls = append(targetUrls, string(line))
 			}
-
-			urls = append(urls, string(line))
 		}
 	}
 
+	urls = append(urls, targetUrls...)
 	randomIndex := rand.Intn(len(urls))
 	return urls[randomIndex]
 }
@@ -63,20 +69,19 @@ func Translate(text, sourceLang, targetLang string) Response {
 
 	if len(sourceLang) == 0 {
 		lang := whatlanggo.DetectLang(text)
-		deepLLang := strings.ToUpper(lang.Iso6391())
-		sourceLang = deepLLang
+		sourceLang = strings.ToUpper(lang.Iso6391())
 	}
 
 	if len(targetLang) == 0 {
 		targetLang = "EN"
 	}
 
-	request := &Request{
+	req := &request{
 		Text:       text,
 		SourceLang: sourceLang,
 		TargetLang: targetLang,
 	}
-	jsonBody, _ := json.Marshal(request)
+	jsonBody, _ := json.Marshal(req)
 
 	var body []byte
 	_ = retry.Do(
