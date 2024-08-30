@@ -18,11 +18,7 @@ import (
 )
 
 func main() {
-	result, err := deeplx.Translate("Hello", "EN", "ZH")
-	if err != nil {
-		fmt.Printf("Error: %v\n", err)
-		return
-	}
+	result := deeplx.Translate("Hello", "EN", "ZH")
 	fmt.Println(result)
 }
 ```
