@@ -3,6 +3,7 @@ package deeplx
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"github.com/abadojack/whatlanggo"
 	"github.com/avast/retry-go"
 	"github.com/tidwall/gjson"
@@ -89,7 +90,7 @@ func Translate(text, sourceLang, targetLang string) *Response {
 		func() error {
 			uri := fetchUri()
 			response, err := http.Post(uri, "application/json", strings.NewReader(string(jsonBody)))
-			log.Infof("url：%s, params：%s", uri, string(jsonBody))
+			log.Info(fmt.Sprintf("url：%s, params：%s", uri, string(jsonBody)))
 
 			if err == nil {
 				defer func() {

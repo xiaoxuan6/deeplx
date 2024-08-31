@@ -32,6 +32,12 @@ func InitLog() {
 	Log = log
 }
 
+func Info(args ...interface{}) {
+	verbose(func() {
+		Log.Info(args)
+	})
+}
+
 func Infof(format string, args ...interface{}) {
 	verbose(func() {
 		Log.Infof(format, args)
