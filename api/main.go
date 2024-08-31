@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 	"github.com/xiaoxuan6/deeplx/api/handlers"
 	"github.com/xiaoxuan6/deeplx/api/log"
 	"github.com/xiaoxuan6/deeplx/api/route"
@@ -13,6 +14,8 @@ func init() {
 }
 
 func main() {
+	_ = godotenv.Load()
+
 	r := mux.NewRouter()
 	r.MethodNotAllowedHandler = http.HandlerFunc(handlers.MethodNotAllowed)
 	r.NotFoundHandler = http.HandlerFunc(handlers.NotFound)

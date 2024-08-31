@@ -6,6 +6,7 @@ require (
 	github.com/abadojack/whatlanggo v1.0.1
 	github.com/avast/retry-go v2.7.0+incompatible
 	github.com/gorilla/mux v1.8.1
+	github.com/joho/godotenv v1.5.1
 	github.com/rifflock/lfshook v0.0.0-20180920164130-b9218ef580f5
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.9.0
