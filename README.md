@@ -1,35 +1,13 @@
 # deeplx
 A Go library used for unlimited DeepL translation
 
-## Installation
-
-Install it with the go get command:
-```bash
-go get github.com/xiaoxuan6/deeplx
-```
-
-## Usage
-Then, you can create a new DeepL translation client and use it for translation:
-
-```go
-import (
-	"fmt"
-	"github.com/xiaoxuan6/deeplx"
-)
-
-func main() {
-	result := deeplx.Translate("Hello", "EN", "ZH")
-	fmt.Println(result)
-}
-```
-
 ## 参数
 
 |字段|描述|
 |:--|:--|
 |text|需要翻译的内容|
-|source_lange|需要翻译语言|
-|target_lange|目标语言|
+|source_lang|需要翻译语言|
+|target_lang|目标语言|
 
 ## 自定义理由
 

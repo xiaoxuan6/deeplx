@@ -40,11 +40,12 @@ func fetchUri() string {
 		}
 
 		resp, err := client.Get("https://github-mirror.us.kg/https://github.com/ycvk/deeplx-local/blob/windows/url.txt")
-		defer func() {
-			_ = resp.Body.Close()
-		}()
 
-		if err == nil {
+		if err != nil {
+			log.Errorf("fetch urls error: %s", err.Error())
+		} else {
+			defer resp.Body.Close()
+
 			r := bufio.NewReader(resp.Body)
 			for {
 				line, _, errs := r.ReadLine()
@@ -55,8 +56,6 @@ func fetchUri() string {
 				targetUrls = append(targetUrls, string(line))
 			}
 			log.Infof("fetch urls len: %s", strconv.Itoa(len(targetUrls)))
-		} else {
-			log.Errorf("fetch urls error: %s", err.Error())
 		}
 	}
 
