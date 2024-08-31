@@ -11,13 +11,14 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
 
 var (
 	targetUrls = make([]string, 0)
-	urls       = []string{"https://deeplx.mingming.dev/translate", "https://deeplx.niubipro.com/translate"}
+	urls       = []string{"https://deeplx.mingming.dev/translate"}
 )
 
 type request struct {
@@ -33,7 +34,7 @@ type Response struct {
 }
 
 func fetchUri() string {
-	if len(targetUrls) < 0 {
+	if len(targetUrls) < 1 {
 		client := &http.Client{
 			Timeout: 3 * time.Second,
 		}
@@ -53,6 +54,9 @@ func fetchUri() string {
 
 				targetUrls = append(targetUrls, string(line))
 			}
+			log.Infof("fetch urls len: %s", strconv.Itoa(len(targetUrls)))
+		} else {
+			log.Errorf("fetch urls error: %s", err.Error())
 		}
 	}
 
