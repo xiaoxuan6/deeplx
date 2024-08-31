@@ -15,7 +15,7 @@ import (
 
 var (
 	targetUrls = make([]string, 0)
-	urls       = []string{"https://deeplx.mingming.dev/translate", "https://deeplx.niubipro.com/translate"}
+	urls       = []string{"https://deeplx.mingming.dev/translate"}
 )
 
 type request struct {
@@ -31,17 +31,13 @@ type Response struct {
 }
 
 func fetchUri() string {
-	if len(targetUrls) < 0 {
+	if len(targetUrls) < 1 {
 		client := &http.Client{
 			Timeout: 3 * time.Second,
 		}
 
 		resp, err := client.Get("https://github-mirror.us.kg/https://github.com/ycvk/deeplx-local/blob/windows/url.txt")
-		defer func() {
-			_ = resp.Body.Close()
-		}()
-
-		if err == nil {
+		if err == nil && resp.StatusCode == 200 {
 			r := bufio.NewReader(resp.Body)
 			for {
 				line, _, errs := r.ReadLine()
@@ -51,17 +47,22 @@ func fetchUri() string {
 
 				targetUrls = append(targetUrls, string(line))
 			}
+			urls = append(urls, targetUrls...)
 		}
 	}
 
-	urls = append(urls, targetUrls...)
-	randomIndex := rand.Intn(len(urls))
-	return urls[randomIndex]
+	urlsLen := len(urls)
+	randomIndex := rand.Intn(urlsLen)
+	if randomIndex >= urlsLen {
+		return urls[0]
+	} else {
+		return urls[randomIndex]
+	}
 }
 
-func Translate(text, sourceLang, targetLang string) Response {
+func Translate(text, sourceLang, targetLang string) *Response {
 	if len(text) == 0 {
-		return Response{
+		return &Response{
 			Code: 500,
 			Msg:  "No Translate Text Found",
 		}
@@ -104,7 +105,7 @@ func Translate(text, sourceLang, targetLang string) Response {
 		retry.LastErrorOnly(true),
 	)
 
-	return Response{
+	return &Response{
 		Code: gjson.Get(string(body), "code").Int(),
 		Data: gjson.Get(string(body), "data").String(),
 		Msg:  gjson.Get(string(body), "message").String(),
