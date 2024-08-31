@@ -38,3 +38,18 @@ func main() {
 ```docker
 docker run --name=deeplx -e ROUTER_PATH="translate" -p 8311:8311 -d ghcr.io/xiaoxuan6/deeplx:latest 
 ```
+
+## 允许打印日志，写入到文件中
+
+```docker
+docker run --name=deeplx -e VERBOSE="true" -p 8311:8311 -d ghcr.io/xiaoxuan6/deeplx:latest 
+```
+
+## 支持 `.env` 文件
+
+文件内容为
+
+```env
+ROUTER_PATH="translate"
+VERBOSE="true"
+```
