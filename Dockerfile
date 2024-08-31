@@ -16,6 +16,7 @@ FROM alpine
 COPY --from=build-dev /go/app/src/deeplx .
 COPY --from=build-dev /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=build-dev /usr/share/zoneinfo /usr/share/zoneinfo
+COPY --link blacklist.txt .
 
 ENV ROUTER_PATH=""
 ENV TZ=Asia/Shanghai

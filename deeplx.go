@@ -11,12 +11,15 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
+	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
 )
 
 var (
+	blackList  = make([]string, 0)
 	targetUrls = make([]string, 0)
 	urls       = []string{"https://deeplx.mingming.dev/translate"}
 )
@@ -31,6 +34,25 @@ type Response struct {
 	Code int64  `json:"code"`
 	Data string `json:"data"`
 	Msg  string `json:"msg"`
+}
+
+func LoadBlack(reset bool) {
+	b, _ := os.ReadFile("blacklist.txt")
+	r := bufio.NewReader(strings.NewReader(string(b)))
+
+	if reset {
+		blackList = blackList[:0]
+	}
+
+	for {
+		line, _, err := r.ReadLine()
+		if err == io.EOF {
+			break
+		}
+
+		newLine := strings.Trim(string(line), "/")
+		blackList = append(blackList, newLine)
+	}
 }
 
 func fetchUri() string {
@@ -91,7 +113,14 @@ func Translate(text, sourceLang, targetLang string) *Response {
 	var body []byte
 	_ = retry.Do(
 		func() error {
-			uri := fetchUri()
+			var uri string
+			for {
+				uri = fetchUri()
+				if ok := slices.Contains(blackList, uri); !ok {
+					break
+				}
+			}
+
 			response, err := http.Post(uri, "application/json", strings.NewReader(string(jsonBody)))
 			log.Info(fmt.Sprintf("url：%s, params：%s", uri, string(jsonBody)))
 

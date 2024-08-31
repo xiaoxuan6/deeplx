@@ -1,0 +1,4 @@
+http://207.148.30.41:1188/translate
+http://139.99.66.128:1188/translate
+http://47.108.85.208:1188/translate
+http://116.204.31.185:1188/translate
