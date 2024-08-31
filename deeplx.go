@@ -6,6 +6,7 @@ import (
 	"github.com/abadojack/whatlanggo"
 	"github.com/avast/retry-go"
 	"github.com/tidwall/gjson"
+	"github.com/xiaoxuan6/deeplx/api/log"
 	"io"
 	"math/rand"
 	"net/http"
@@ -86,7 +87,9 @@ func Translate(text, sourceLang, targetLang string) *Response {
 	var body []byte
 	_ = retry.Do(
 		func() error {
-			response, err := http.Post(fetchUri(), "application/json", strings.NewReader(string(jsonBody)))
+			uri := fetchUri()
+			response, err := http.Post(uri, "application/json", strings.NewReader(string(jsonBody)))
+			log.Infof("url：%s, params：%s", uri, string(jsonBody))
 
 			if err == nil {
 				defer func() {
@@ -94,8 +97,10 @@ func Translate(text, sourceLang, targetLang string) *Response {
 				}()
 
 				body, err = io.ReadAll(response.Body)
+				log.Infof("response：%s", string(body))
 			} else {
 				body = []byte(`{"code":500, "message": ` + err.Error() + `}`)
+				log.Errorf("response error: %s", err.Error())
 			}
 
 			return err
