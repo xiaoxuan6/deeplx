@@ -59,9 +59,9 @@ func fetchUri() string {
 	return urls[randomIndex]
 }
 
-func Translate(text, sourceLang, targetLang string) Response {
+func Translate(text, sourceLang, targetLang string) *Response {
 	if len(text) == 0 {
-		return Response{
+		return &Response{
 			Code: 500,
 			Msg:  "No Translate Text Found",
 		}
@@ -104,7 +104,7 @@ func Translate(text, sourceLang, targetLang string) Response {
 		retry.LastErrorOnly(true),
 	)
 
-	return Response{
+	return &Response{
 		Code: gjson.Get(string(body), "code").Int(),
 		Data: gjson.Get(string(body), "data").String(),
 		Msg:  gjson.Get(string(body), "message").String(),

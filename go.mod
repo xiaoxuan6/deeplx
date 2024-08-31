@@ -5,6 +5,7 @@ go 1.22.5
 require (
 	github.com/abadojack/whatlanggo v1.0.1
 	github.com/avast/retry-go v2.7.0+incompatible
+	github.com/gorilla/mux v1.8.1
 	github.com/stretchr/testify v1.9.0
 	github.com/tidwall/gjson v1.17.3
 )
