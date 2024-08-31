@@ -22,3 +22,19 @@ func main() {
 	fmt.Println(result)
 }
 ```
+
+## 参数
+
+|字段|描述|
+|:--|:--|
+|text|需要翻译的内容|
+|source_lange|需要翻译语言|
+|target_lange|目标语言|
+
+## 自定义理由
+
+默认路由 `translate`，指定变量 `ROUTER_PATH="translate"`
+
+```docker
+docker run --name=deeplx -e ROUTER_PATH="translate" -p 8311:8311 -d ghcr.io/xiaoxuan6/deeplx:latest 
+```

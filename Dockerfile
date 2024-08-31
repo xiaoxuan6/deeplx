@@ -16,4 +16,6 @@ FROM scratch
 COPY --from=build-dev /go/app/src/deeplx .
 ENV ROUTER_PATH=""
 
+EXPOSE 8311
+
 ENTRYPOINT ["/deeplx"]
