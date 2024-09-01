@@ -9,16 +9,21 @@ import (
 	"github.com/tidwall/gjson"
 	"github.com/xiaoxuan6/deeplx/api/log"
 	"io"
+	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"os"
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
 var (
+	wg   sync.WaitGroup
+	lock sync.Mutex
+
 	blackList  = make([]string, 0)
 	targetUrls = make([]string, 0)
 	urls       = []string{"https://deeplx.mingming.dev/translate"}
@@ -53,6 +58,43 @@ func LoadBlack(reset bool) {
 		newLine := strings.Trim(string(line), "/")
 		blackList = append(blackList, newLine)
 	}
+}
+
+func CheckUrlAndReloadBlack() {
+	targetUrls = targetUrls[:0]
+	_ = fetchUri()
+
+	client := &http.Client{
+		Timeout: 3 * time.Second,
+	}
+	blackList = blackList[:0]
+	for _, url := range targetUrls {
+		url := url
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			resp, err := client.Get(strings.ReplaceAll(url, "/translate", ""))
+			if err != nil {
+				lock.Lock()
+				blackList = append(blackList, url)
+				lock.Unlock()
+				return
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				lock.Lock()
+				blackList = append(blackList, url)
+				lock.Unlock()
+			}
+		}()
+	}
+
+	wg.Wait()
+
+	body := fmt.Sprintf("%s\n", strings.Join(blackList, "\n"))
+	_ = ioutil.WriteFile("blacklist.txt", []byte(body), os.ModePerm)
 }
 
 func fetchUri() string {

@@ -15,3 +15,8 @@ func TestTranslate(t *testing.T) {
 	assert.Equal(t, int64(200), response.Code)
 	t.Log(response)
 }
+
+func TestCheckUrlAndReloadBlack(t *testing.T) {
+	CheckUrlAndReloadBlack()
+	assert.Equal(t, nil, "")
+}
