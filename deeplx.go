@@ -121,6 +121,8 @@ func fetchUri() string {
 			}
 			log.Infof("fetch urls len: %s", strconv.Itoa(len(targetUrls)))
 		}
+	} else {
+		urls = urls[:1]
 	}
 
 	urls = append(urls, targetUrls...)
