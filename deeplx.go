@@ -87,7 +87,10 @@ func Translate(text, sourceLang, targetLang string) *Response {
 	var body []byte
 	_ = retry.Do(
 		func() error {
-			response, err := http.Post(fetchUri(), "application/json", strings.NewReader(string(jsonBody)))
+			client := &http.Client{
+				Timeout: 3 * time.Second,
+			}
+			response, err := client.Post(fetchUri(), "application/json", strings.NewReader(string(jsonBody)))
 
 			if err == nil {
 				defer func() {
