@@ -64,9 +64,6 @@ func CheckUrlAndReloadBlack() {
 	targetUrls = targetUrls[:0]
 	_ = fetchUri()
 
-	client := &http.Client{
-		Timeout: 3 * time.Second,
-	}
 	blackList = blackList[:0]
 	for _, url := range targetUrls {
 		url := url
@@ -74,6 +71,9 @@ func CheckUrlAndReloadBlack() {
 		go func() {
 			defer wg.Done()
 
+			client := &http.Client{
+				Timeout: 3 * time.Second,
+			}
 			resp, err := client.Get(strings.ReplaceAll(url, "/translate", ""))
 			if err != nil {
 				lock.Lock()
@@ -104,7 +104,6 @@ func fetchUri() string {
 		}
 
 		resp, err := client.Get("https://github-mirror.us.kg/https://github.com/ycvk/deeplx-local/blob/windows/url.txt")
-
 		if err != nil {
 			log.Errorf("fetch urls error: %s", err.Error())
 		} else {
@@ -163,7 +162,10 @@ func Translate(text, sourceLang, targetLang string) *Response {
 				}
 			}
 
-			response, err := http.Post(uri, "application/json", strings.NewReader(string(jsonBody)))
+			client := &http.Client{
+				Timeout: 3 * time.Second,
+			}
+			response, err := client.Post(uri, "application/json", strings.NewReader(string(jsonBody)))
 			log.Info(fmt.Sprintf("url：%s, params：%s", uri, string(jsonBody)))
 
 			if err == nil {
@@ -174,6 +176,7 @@ func Translate(text, sourceLang, targetLang string) *Response {
 				body, err = io.ReadAll(response.Body)
 				log.Infof("response：%s", string(body))
 			} else {
+				blackList = append(blackList, uri)
 				body = []byte(`{"code":500, "message": ` + err.Error() + `}`)
 				log.Errorf("response error: %s", err.Error())
 			}
