@@ -32,3 +32,9 @@ func TestTranslateWithGo(t *testing.T) {
 	end := time.Now().Sub(start).Seconds()
 	t.Log(fmt.Sprintf("time: %.2f", end))
 }
+
+func TestTranslateByDeeplx(t *testing.T) {
+	response := TranslateByDeeplx("Hello", "En", "zh")
+	assert.Equal(t, int64(200), response.Code)
+	t.Log(response)
+}

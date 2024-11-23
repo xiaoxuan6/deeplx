@@ -3,6 +3,7 @@ package deeplx
 import (
 	"bufio"
 	"encoding/json"
+	"github.com/OwO-Network/DeepLX/translate"
 	"github.com/abadojack/whatlanggo"
 	"github.com/avast/retry-go"
 	"github.com/tidwall/gjson"
@@ -105,7 +106,7 @@ func Translate(text, sourceLang, targetLang string) *Response {
 	jsonBody, _ := json.Marshal(req)
 
 	var body []byte
-	_ = retry.Do(
+	err := retry.Do(
 		func() error {
 			client := &http.Client{
 				Timeout: 3 * time.Second,
@@ -128,9 +129,29 @@ func Translate(text, sourceLang, targetLang string) *Response {
 		retry.LastErrorOnly(true),
 	)
 
+	if err == nil {
+		return &Response{
+			Code: gjson.Get(string(body), "code").Int(),
+			Data: gjson.Get(string(body), "data").String(),
+			Msg:  gjson.Get(string(body), "message").String(),
+		}
+	}
+
+	return TranslateByDeeplx(text, sourceLang, targetLang)
+}
+
+func TranslateByDeeplx(text, sourceLang, targetLang string) *Response {
+	result, err := translate.TranslateByDeepLX(sourceLang, targetLang, text, "", "")
+	if err != nil {
+		return &Response{
+			Code: 500,
+			Msg:  err.Error(),
+		}
+	}
+
 	return &Response{
-		Code: gjson.Get(string(body), "code").Int(),
-		Data: gjson.Get(string(body), "data").String(),
-		Msg:  gjson.Get(string(body), "message").String(),
+		Code: int64(result.Code),
+		Data: result.Data,
+		Msg:  result.Message,
 	}
 }
