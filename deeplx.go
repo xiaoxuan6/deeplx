@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"github.com/OwO-Network/DeepLX/translate"
 	"github.com/abadojack/whatlanggo"
 	"github.com/avast/retry-go"
 	"github.com/tidwall/gjson"
@@ -14,7 +15,6 @@ import (
 	"net/http"
 	"os"
 	"slices"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -118,13 +118,35 @@ func fetchUri() string {
 
 				targetUrls = append(targetUrls, string(line))
 			}
-			log.Infof("fetch urls len: %s", strconv.Itoa(len(targetUrls)))
 		}
-		urls = append(urls, targetUrls...)
+
+		for _, url := range targetUrls {
+			wg.Add(1)
+			url := url
+
+			go func() {
+				defer wg.Done()
+				resp, err = client.Get(url)
+				if err != nil {
+					return
+				}
+				defer resp.Body.Close()
+
+				if resp.StatusCode == 200 {
+					urls = append(urls, url)
+				}
+			}()
+		}
+		wg.Wait()
 	}
 
-	randomIndex := rand.Intn(len(urls))
-	return urls[randomIndex]
+	urlsLen := len(urls)
+	randomIndex := rand.Intn(urlsLen)
+	if randomIndex >= urlsLen {
+		return urls[0]
+	} else {
+		return urls[randomIndex]
+	}
 }
 
 func Translate(text, sourceLang, targetLang string) *Response {
@@ -152,7 +174,7 @@ func Translate(text, sourceLang, targetLang string) *Response {
 	jsonBody, _ := json.Marshal(req)
 
 	var body []byte
-	_ = retry.Do(
+	err := retry.Do(
 		func() error {
 			var uri string
 			for {
@@ -187,9 +209,25 @@ func Translate(text, sourceLang, targetLang string) *Response {
 		retry.LastErrorOnly(true),
 	)
 
+	if err == nil {
+		return &Response{
+			Code: gjson.Get(string(body), "code").Int(),
+			Data: gjson.Get(string(body), "data").String(),
+			Msg:  gjson.Get(string(body), "message").String(),
+		}
+	}
+
+	result, err := translate.TranslateByDeepLX(sourceLang, targetLang, text, "", "")
+	if err != nil {
+		return &Response{
+			Code: 500,
+			Msg:  err.Error(),
+		}
+	}
+
 	return &Response{
-		Code: gjson.Get(string(body), "code").Int(),
-		Data: gjson.Get(string(body), "data").String(),
-		Msg:  gjson.Get(string(body), "message").String(),
+		Code: int64(result.Code),
+		Data: result.Data,
+		Msg:  result.Message,
 	}
 }

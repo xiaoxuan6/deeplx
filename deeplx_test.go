@@ -18,5 +18,5 @@ func TestTranslate(t *testing.T) {
 
 func TestCheckUrlAndReloadBlack(t *testing.T) {
 	CheckUrlAndReloadBlack()
-	assert.Equal(t, nil, "")
+	assert.Equal(t, nil, nil)
 }

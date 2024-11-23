@@ -1,5 +1,6 @@
 .github
 .gitignore
 .goreleaser.yaml
+deeplx_test.go
 LICENSE
 README.md
