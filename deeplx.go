@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -47,8 +48,27 @@ func fetchUri() string {
 
 				targetUrls = append(targetUrls, string(line))
 			}
-			urls = append(urls, targetUrls...)
 		}
+
+		var wg sync.WaitGroup
+		for _, url := range targetUrls {
+			wg.Add(1)
+			url := url
+
+			go func() {
+				defer wg.Done()
+				resp, err = client.Get(url)
+				if err != nil {
+					return
+				}
+				defer resp.Body.Close()
+
+				if resp.StatusCode == 200 {
+					urls = append(urls, url)
+				}
+			}()
+		}
+		wg.Wait()
 	}
 
 	urlsLen := len(urls)
