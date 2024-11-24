@@ -3,4 +3,6 @@
 .goreleaser.yaml
 deeplx_test.go
 LICENSE
+Makefile
 README.md
+logs
