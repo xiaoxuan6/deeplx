@@ -17,6 +17,9 @@ func TestTranslate(t *testing.T) {
 }
 
 func TestCheckUrlAndReloadBlack(t *testing.T) {
+	_ = os.Setenv("VERBOSE", "true")
+	log.InitLog()
+
 	CheckUrlAndReloadBlack()
 	assert.Equal(t, nil, nil)
 }

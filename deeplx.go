@@ -7,6 +7,7 @@ import (
 	"github.com/OwO-Network/DeepLX/translate"
 	"github.com/abadojack/whatlanggo"
 	"github.com/avast/retry-go"
+	"github.com/samber/lo"
 	"github.com/tidwall/gjson"
 	"github.com/xiaoxuan6/deeplx/api/log"
 	"io"
@@ -62,63 +63,34 @@ func LoadBlack(reset bool) {
 
 func CheckUrlAndReloadBlack() {
 	targetUrls = targetUrls[:0]
+	urls = urls[:0]
 	_ = fetchUri()
 
-	blackList = blackList[:0]
-	for _, url := range targetUrls {
-		url := url
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-
-			client := &http.Client{
-				Timeout: 3 * time.Second,
-			}
-			resp, err := client.Get(strings.ReplaceAll(url, "/translate", ""))
-			if err != nil {
-				lock.Lock()
-				blackList = append(blackList, url)
-				lock.Unlock()
-				return
-			}
-			defer resp.Body.Close()
-
-			if resp.StatusCode != http.StatusOK {
-				lock.Lock()
-				blackList = append(blackList, url)
-				lock.Unlock()
-			}
-		}()
+	blackList, _ = lo.Difference(targetUrls, urls)
+	if len(blackList) > 0 {
+		_ = os.Truncate("blacklist.txt", 0)
 	}
-
-	wg.Wait()
 
 	body := fmt.Sprintf("%s\n", strings.Join(blackList, "\n"))
 	_ = ioutil.WriteFile("blacklist.txt", []byte(body), os.ModePerm)
+
+	log.Infof("target url len %d", len(targetUrls))
+	log.Infof("url len %d", len(urls))
+	log.Infof("black url len %d", len(blackList))
 }
 
 func fetchUri() string {
-	if len(targetUrls) < 1 {
-		client := &http.Client{
-			Timeout: 3 * time.Second,
+	if len(urls) < 1 {
+
+		var wgs sync.WaitGroup
+		wgs.Add(2)
+		for i, url := range []string{
+			"https://github-mirror.us.kg/https://github.com/ycvk/deeplx-local/blob/windows/url.txt",
+			"https://github-mirror.us.kg/https://github.com/xiaozhou26/serch_deeplx/blob/main/success.txt",
+		} {
+			go checkUrls(&wgs, i, url)
 		}
-
-		resp, err := client.Get("https://github-mirror.us.kg/https://github.com/ycvk/deeplx-local/blob/windows/url.txt")
-		if err != nil {
-			log.Errorf("fetch urls error: %s", err.Error())
-		} else {
-			defer resp.Body.Close()
-
-			r := bufio.NewReader(resp.Body)
-			for {
-				line, _, errs := r.ReadLine()
-				if errs == io.EOF {
-					break
-				}
-
-				targetUrls = append(targetUrls, string(line))
-			}
-		}
+		wgs.Wait()
 
 		for _, url := range targetUrls {
 			wg.Add(1)
@@ -126,7 +98,7 @@ func fetchUri() string {
 
 			go func() {
 				defer wg.Done()
-				resp, err = client.Get(url)
+				resp, err := client.Get(strings.ReplaceAll(url, "/translate", ""))
 				if err != nil {
 					return
 				}
@@ -146,6 +118,36 @@ func fetchUri() string {
 		return urls[0]
 	} else {
 		return urls[randomIndex]
+	}
+}
+
+var client = &http.Client{
+	Timeout: 3 * time.Second,
+}
+
+func checkUrls(wg *sync.WaitGroup, k int, url string) {
+	defer wg.Done()
+
+	resp, err := client.Get(url)
+	if err != nil {
+		log.Errorf("fetch urls error: %s", err.Error())
+		return
+	}
+
+	defer resp.Body.Close()
+
+	r := bufio.NewReader(resp.Body)
+	for {
+		line, _, errs := r.ReadLine()
+		if errs == io.EOF {
+			break
+		}
+
+		newUrl := string(line)
+		if k == 1 {
+			newUrl = fmt.Sprintf("%s/translate", newUrl)
+		}
+		targetUrls = append(targetUrls, newUrl)
 	}
 }
 
