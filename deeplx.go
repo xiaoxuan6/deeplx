@@ -28,6 +28,10 @@ type Response struct {
 }
 
 func Translate(text, sourceLang, targetLang string) *Response {
+	return TranslateWithProxyUrl(text, sourceLang, targetLang, false)
+}
+
+func TranslateWithProxyUrl(text, sourceLang, targetLang string, isProxyUrl bool) *Response {
 	if len(text) == 0 {
 		return &Response{
 			Code: 500,
@@ -48,10 +52,12 @@ func Translate(text, sourceLang, targetLang string) *Response {
 	requestParams.WriteString(`{"text":"` + text + `","source_lang":"` + sourceLang + `","target_lang":"` + targetLang + `"}`)
 
 	transport := &http.Transport{}
-	if proxyUrl := getProxyUrl(); proxyUrl != "" {
-		proxy, errs := url.Parse(proxyUrl)
-		if errs == nil {
-			transport.Proxy = http.ProxyURL(proxy)
+	if isProxyUrl == true {
+		if proxyUrl := getProxyUrl(); proxyUrl != "" {
+			proxy, errs := url.Parse(proxyUrl)
+			if errs == nil {
+				transport.Proxy = http.ProxyURL(proxy)
+			}
 		}
 	}
 
@@ -81,7 +87,11 @@ func Translate(text, sourceLang, targetLang string) *Response {
 	)
 
 	if err != nil {
-		return TranslateByDeeplx(text, sourceLang, targetLang)
+		var proxyUrl string
+		if isProxyUrl == true {
+			proxyUrl = getProxyUrl()
+		}
+		return TranslateByDeeplx(text, sourceLang, targetLang, proxyUrl)
 	}
 
 	return &Response{
@@ -91,8 +101,8 @@ func Translate(text, sourceLang, targetLang string) *Response {
 	}
 }
 
-func TranslateByDeeplx(text, sourceLang, targetLang string) *Response {
-	result, err := translate.TranslateByDeepLX(sourceLang, targetLang, text, "", getProxyUrl())
+func TranslateByDeeplx(text, sourceLang, targetLang, proxyUrl string) *Response {
+	result, err := translate.TranslateByDeepLX(sourceLang, targetLang, text, "", proxyUrl)
 	if err != nil {
 		return &Response{
 			Code: 500,

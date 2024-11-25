@@ -112,7 +112,7 @@ func getProxyUrl() string {
 				break
 			}
 
-			proxyUrls = append(proxyUrls, line)
+			proxyUrls = append(proxyUrls, strings.Trim(line, ","))
 		}
 	})
 
