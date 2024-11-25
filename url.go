@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"strings"
@@ -31,7 +32,7 @@ func fetchUri() string {
 		wg.Wait()
 	}
 
-	randomIndex := randomNum()
+	randomIndex := randomNum(urls)
 	if randomIndex <= len(urls) {
 		return urls[randomIndex]
 	}
@@ -81,7 +82,43 @@ func checkUrlVerify(url string, wg *sync.WaitGroup) {
 	}
 }
 
-func randomNum() int {
-	urlsLen := len(urls)
+func randomNum(slices []string) int {
+	urlsLen := len(slices)
 	return rand.Intn(urlsLen)
+}
+
+var (
+	proxyUrls []string
+	once      sync.Once
+)
+
+func getProxyUrl() string {
+	once.Do(func() {
+		res, err := client.Get("https://269900.xyz/fetch_http_all")
+		if err != nil {
+			return
+		}
+
+		defer res.Body.Close()
+		item, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return
+		}
+
+		f := bufio.NewReader(strings.NewReader(string(item)))
+		for {
+			line, err := f.ReadString('\n')
+			if err != nil {
+				break
+			}
+
+			proxyUrls = append(proxyUrls, line)
+		}
+	})
+
+	if len(proxyUrls) < 1 {
+		return ""
+	}
+
+	return proxyUrls[randomNum(proxyUrls)]
 }

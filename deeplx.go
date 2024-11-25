@@ -7,13 +7,16 @@ import (
 	"github.com/avast/retry-go"
 	"github.com/tidwall/gjson"
 	"io"
+	"net/http"
+	"net/url"
 	"strings"
 	"sync"
+	"time"
 )
 
 var (
 	wg sync.WaitGroup
-	
+
 	targetUrls = make([]string, 0)
 	urls       = []string{"https://deeplx.mingming.dev/translate"}
 )
@@ -44,10 +47,23 @@ func Translate(text, sourceLang, targetLang string) *Response {
 	requestParams := bytes.Buffer{}
 	requestParams.WriteString(`{"text":"` + text + `","source_lang":"` + sourceLang + `","target_lang":"` + targetLang + `"}`)
 
+	transport := &http.Transport{}
+	if proxyUrl := getProxyUrl(); proxyUrl != "" {
+		proxy, errs := url.Parse(proxyUrl)
+		if errs == nil {
+			transport.Proxy = http.ProxyURL(proxy)
+		}
+	}
+
+	httpClient := &http.Client{
+		Transport: transport,
+		Timeout:   3 * time.Second,
+	}
+
 	var body []byte
 	err := retry.Do(
 		func() error {
-			response, err := client.Post(fetchUri(), "application/json", strings.NewReader(requestParams.String()))
+			response, err := httpClient.Post(fetchUri(), "application/json", strings.NewReader(requestParams.String()))
 			defer func() {
 				_ = response.Body.Close()
 			}()
@@ -76,7 +92,7 @@ func Translate(text, sourceLang, targetLang string) *Response {
 }
 
 func TranslateByDeeplx(text, sourceLang, targetLang string) *Response {
-	result, err := translate.TranslateByDeepLX(sourceLang, targetLang, text, "", "")
+	result, err := translate.TranslateByDeepLX(sourceLang, targetLang, text, "", getProxyUrl())
 	if err != nil {
 		return &Response{
 			Code: 500,
