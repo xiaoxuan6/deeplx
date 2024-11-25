@@ -64,16 +64,16 @@ func Translate(text, sourceLang, targetLang string) *Response {
 	err := retry.Do(
 		func() error {
 			response, err := httpClient.Post(fetchUri(), "application/json", strings.NewReader(requestParams.String()))
+			if err != nil {
+				body = []byte(`{"code":500, "message": "` + err.Error() + `"}`)
+				return err
+			}
+
 			defer func() {
 				_ = response.Body.Close()
 			}()
 
-			if err == nil {
-				body, err = io.ReadAll(response.Body)
-			} else {
-				body = []byte(`{"code":500, "message": ` + err.Error() + `}`)
-			}
-
+			body, err = io.ReadAll(response.Body)
 			return err
 		},
 		retry.Attempts(3),

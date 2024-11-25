@@ -22,3 +22,8 @@ func main() {
 	fmt.Println(result)
 }
 ```
+
+> [!WARNING]  
+> 并发控制在1000以内
+> 
+> Concurrent control within 1000
