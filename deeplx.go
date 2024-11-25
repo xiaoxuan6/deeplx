@@ -1,84 +1,27 @@
 package deeplx
 
 import (
-	"bufio"
-	"encoding/json"
+	"bytes"
 	"github.com/OwO-Network/DeepLX/translate"
 	"github.com/abadojack/whatlanggo"
 	"github.com/avast/retry-go"
 	"github.com/tidwall/gjson"
 	"io"
-	"math/rand"
-	"net/http"
 	"strings"
 	"sync"
-	"time"
 )
 
 var (
+	wg sync.WaitGroup
+	
 	targetUrls = make([]string, 0)
 	urls       = []string{"https://deeplx.mingming.dev/translate"}
 )
-
-type request struct {
-	Text       string `json:"text"`
-	SourceLang string `json:"source_lang"`
-	TargetLang string `json:"target_lang"`
-}
 
 type Response struct {
 	Code int64  `json:"code"`
 	Data string `json:"data"`
 	Msg  string `json:"msg"`
-}
-
-func fetchUri() string {
-	if len(targetUrls) < 1 {
-		client := &http.Client{
-			Timeout: 3 * time.Second,
-		}
-
-		resp, err := client.Get("https://github-mirror.us.kg/https://github.com/ycvk/deeplx-local/blob/windows/url.txt")
-		if err == nil && resp.StatusCode == 200 {
-			r := bufio.NewReader(resp.Body)
-			for {
-				line, _, errs := r.ReadLine()
-				if errs == io.EOF {
-					break
-				}
-
-				targetUrls = append(targetUrls, string(line))
-			}
-		}
-
-		var wg sync.WaitGroup
-		for _, url := range targetUrls {
-			wg.Add(1)
-			url := url
-
-			go func() {
-				defer wg.Done()
-				resp, err = client.Get(url)
-				if err != nil {
-					return
-				}
-				defer resp.Body.Close()
-
-				if resp.StatusCode == 200 {
-					urls = append(urls, url)
-				}
-			}()
-		}
-		wg.Wait()
-	}
-
-	urlsLen := len(urls)
-	randomIndex := rand.Intn(urlsLen)
-	if randomIndex >= urlsLen {
-		return urls[0]
-	} else {
-		return urls[randomIndex]
-	}
 }
 
 func Translate(text, sourceLang, targetLang string) *Response {
@@ -98,26 +41,18 @@ func Translate(text, sourceLang, targetLang string) *Response {
 		targetLang = "EN"
 	}
 
-	req := &request{
-		Text:       text,
-		SourceLang: sourceLang,
-		TargetLang: targetLang,
-	}
-	jsonBody, _ := json.Marshal(req)
+	requestParams := bytes.Buffer{}
+	requestParams.WriteString(`{"text":"` + text + `","source_lang":"` + sourceLang + `","target_lang":"` + targetLang + `"}`)
 
 	var body []byte
 	err := retry.Do(
 		func() error {
-			client := &http.Client{
-				Timeout: 3 * time.Second,
-			}
-			response, err := client.Post(fetchUri(), "application/json", strings.NewReader(string(jsonBody)))
+			response, err := client.Post(fetchUri(), "application/json", strings.NewReader(requestParams.String()))
+			defer func() {
+				_ = response.Body.Close()
+			}()
 
 			if err == nil {
-				defer func() {
-					_ = response.Body.Close()
-				}()
-
 				body, err = io.ReadAll(response.Body)
 			} else {
 				body = []byte(`{"code":500, "message": ` + err.Error() + `}`)
@@ -129,15 +64,15 @@ func Translate(text, sourceLang, targetLang string) *Response {
 		retry.LastErrorOnly(true),
 	)
 
-	if err == nil {
-		return &Response{
-			Code: gjson.Get(string(body), "code").Int(),
-			Data: gjson.Get(string(body), "data").String(),
-			Msg:  gjson.Get(string(body), "message").String(),
-		}
+	if err != nil {
+		return TranslateByDeeplx(text, sourceLang, targetLang)
 	}
 
-	return TranslateByDeeplx(text, sourceLang, targetLang)
+	return &Response{
+		Code: gjson.Get(string(body), "code").Int(),
+		Data: gjson.Get(string(body), "data").String(),
+		Msg:  gjson.Get(string(body), "message").String(),
+	}
 }
 
 func TranslateByDeeplx(text, sourceLang, targetLang string) *Response {
