@@ -102,7 +102,7 @@ func TranslateWithProxyUrl(text, sourceLang, targetLang string, isProxyUrl bool)
 }
 
 func TranslateByDeeplx(text, sourceLang, targetLang, proxyUrl string) *Response {
-	result, err := translate.TranslateByDeepLX(sourceLang, targetLang, text, "", proxyUrl)
+	result, err := translate.TranslateByDeepLX(sourceLang, targetLang, text, "", proxyUrl, "")
 	if err != nil {
 		return &Response{
 			Code: 500,
