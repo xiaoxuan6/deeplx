@@ -58,8 +58,8 @@ func fetchUri() string {
 		var wgs sync.WaitGroup
 		wgs.Add(2)
 		for i, url := range []string{
-			"https://github-mirror.us.kg/https://github.com/ycvk/deeplx-local/blob/windows/url.txt",
-			"https://github-mirror.us.kg/https://github.com/xiaozhou26/serch_deeplx/blob/main/success.txt",
+			"https://github-mirror.xiaoxuan6.me/https://github.com/ycvk/deeplx-local/blob/windows/url.txt",
+			"https://github-mirror.xiaoxuan6.me/https://github.com/xiaozhou26/serch_deeplx/blob/main/success.txt",
 		} {
 			go fetchUrls(&wgs, i, url)
 		}
