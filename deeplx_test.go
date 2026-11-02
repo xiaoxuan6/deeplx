@@ -22,6 +22,10 @@ func TestTranslateByLanguage(t *testing.T) {
 	assert.Equal(t, int64(200), response.Code)
 	t.Log(response)
 
+	response = Translate("Hello", "EN", "ja")
+	assert.Equal(t, int64(200), response.Code)
+	t.Log(response)
+
 	response = Translate("Hello", "th")
 	assert.Equal(t, int64(200), response.Code)
 	t.Log(response)

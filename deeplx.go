@@ -7,6 +7,7 @@ import (
 	"github.com/tidwall/gjson"
 	"io"
 	"net/http"
+	"strings"
 )
 
 type Response struct {
@@ -36,12 +37,12 @@ func Translate(text string, languages ...string) *Response {
 	targetLang := "zh"
 
 	if len(languages) == 1 {
-		targetLang = languages[0]
+		targetLang = strings.ToLower(languages[0])
 	}
 
 	if len(languages) == 2 && languages[0] != "" && languages[1] != "" {
-		sourceLang = languages[0]
-		targetLang = languages[1]
+		sourceLang = strings.ToLower(languages[0])
+		targetLang = strings.ToLower(languages[1])
 	}
 
 	var body []byte
