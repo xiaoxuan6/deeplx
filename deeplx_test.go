@@ -1,78 +1,28 @@
 package deeplx
 
 import (
-	"fmt"
 	"github.com/stretchr/testify/assert"
-	"sync"
 	"testing"
-	"time"
 )
 
 func TestTranslate(t *testing.T) {
-	response := Translate("Hello", "EN", "ZH")
+	response := Translate("Hello")
 	assert.Equal(t, int64(200), response.Code)
+	assert.Equal(t, "你好", response.Data)
+	assert.Equal(t, "ok", response.Msg)
 	t.Log(response)
 }
 
-func TestTranslateWithGo(t *testing.T) {
-	var wg sync.WaitGroup
+func TestTranslateByLanguage(t *testing.T) {
+	response := Translate("Hello", "en", "vi")
+	assert.Equal(t, int64(200), response.Code)
+	t.Log(response)
 
-	start := time.Now()
-	for i := 0; i < 100; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			response := Translate("Hello", "EN", "ZH")
-			assert.Equal(t, int64(200), response.Code)
-			t.Log(response)
-		}()
-	}
-	wg.Wait()
+	response = Translate("Hello", "en", "ja")
+	assert.Equal(t, int64(200), response.Code)
+	t.Log(response)
 
-	end := time.Now().Sub(start).Seconds()
-	t.Log(fmt.Sprintf("time: %.2f", end))
-}
-
-func TestTranslateWithGoIsProxyUrl(t *testing.T) {
-	var wg sync.WaitGroup
-
-	start := time.Now()
-	for i := 0; i < 100; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			response := TranslateWithProxyUrl("Hello", "EN", "ZH", true)
-			assert.Equal(t, int64(200), response.Code)
-			t.Log(response)
-		}()
-	}
-	wg.Wait()
-
-	end := time.Now().Sub(start).Seconds()
-	t.Log(fmt.Sprintf("time: %.2f", end))
-}
-
-func TestTranslateWithGo300(t *testing.T) {
-	var wg sync.WaitGroup
-
-	start := time.Now()
-	for i := 0; i < 300; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			response := Translate("Hello", "EN", "ZH")
-			assert.Equal(t, int64(200), response.Code)
-			t.Log(response)
-		}()
-	}
-	wg.Wait()
-
-	end := time.Now().Sub(start).Seconds()
-	t.Log(fmt.Sprintf("time: %.2f", end))
-}
-
-func TestTranslateByDeeplx(t *testing.T) {
-	response := TranslateByDeeplx("Hello", "En", "zh", "")
+	response = Translate("Hello", "th")
 	assert.Equal(t, int64(200), response.Code)
 	t.Log(response)
 }
